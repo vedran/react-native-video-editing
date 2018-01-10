@@ -1,3 +1,4 @@
+
 #import "RNAVEditing.h"
 #if __has_include("RCTUtils.h")
 #import "RCTUtils.h"
@@ -227,109 +228,6 @@ RCT_EXPORT_METHOD(videoTriming:(NSDictionary *)videoObject
      });
    }
    ];
-  
-
-  return;
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  /*
- 
-  
-  CMTime duration;
-  if ([videoObject[@"duration"] doubleValue] == 0.0) {
-    duration = videoAsset.duration;
-  }else{
-    duration = CMTimeMakeWithSeconds([videoObject[@"Duration"] doubleValue], 600);
-  }
-  
-  CMTime start = CMTimeMakeWithSeconds([videoObject[@"VideoStartTime"] doubleValue], 600);
-  CMTimeRange videoRange = CMTimeRangeMake(start, duration);
-  
-  AVURLAsset *audioAsset = [self uriSource:audioObject];
-  start = CMTimeMakeWithSeconds([audioObject[@"AudioStartTime"] doubleValue], 600);
-  CMTimeRange AudioRange = CMTimeRangeMake(start, duration);
-  
-  
-  AVMutableComposition* mixComposition = [AVMutableComposition composition];
-  
-  //slow down whole video by 2.0
-  double videoScaleFactor = 2.0;
-  CMTime videoDuration = videoAsset.duration;
-  
-  //Now we are creating the first AVMutableCompositionTrack containing our audio and add it to our AVMutableComposition object.
-  AVMutableCompositionTrack *b_compositionAudioTrack = [mixComposition addMutableTrackWithMediaType:AVMediaTypeAudio preferredTrackID:kCMPersistentTrackID_Invalid];
-  [b_compositionAudioTrack insertTimeRange:AudioRange ofTrack:[[audioAsset tracksWithMediaType:AVMediaTypeAudio] objectAtIndex:0] atTime:kCMTimeZero error:nil];
-  
-  
-  //Now we are creating the second AVMutableCompositionTrack containing our video and add it to our AVMutableComposition object.
-  AVAssetTrack *videoAssetTrack = [[videoAsset tracksWithMediaType:AVMediaTypeVideo] objectAtIndex:0];
-  AVMutableCompositionTrack *a_compositionVideoTrack = [mixComposition addMutableTrackWithMediaType:AVMediaTypeVideo preferredTrackID:kCMPersistentTrackID_Invalid];
-  [a_compositionVideoTrack insertTimeRange:videoRange ofTrack:[[videoAsset tracksWithMediaType:AVMediaTypeVideo] objectAtIndex:0] atTime:kCMTimeZero error:nil];
-  
-  [a_compositionVideoTrack setPreferredTransform:videoAssetTrack.preferredTransform];
-  
-  
-  
-  
-  //decide the path where you want to store the final video created with audio and video merge.
-  NSArray *dirPaths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-  NSString *docsDir = [dirPaths objectAtIndex:0];
-  NSString *outputFilePath = [docsDir stringByAppendingPathComponent:[NSString stringWithFormat:@"Groups.mp4"]];
-  NSURL *outputFileUrl = [NSURL fileURLWithPath:outputFilePath];
-  if ([[NSFileManager defaultManager] fileExistsAtPath:outputFilePath])
-    [[NSFileManager defaultManager] removeItemAtPath:outputFilePath error:nil];
-  
-  //Now create an AVAssetExportSession object that will save your final video at specified path.
-  AVAssetExportSession* _assetExport;
-  
-  switch([videoObject[@"videoQuality"] intValue]){
-    case 1  :
-      _assetExport = [[AVAssetExportSession alloc] initWithAsset:mixComposition presetName:AVAssetExportPresetLowQuality];
-      break;
-    case 2  :
-      _assetExport = [[AVAssetExportSession alloc] initWithAsset:mixComposition presetName:AVAssetExportPresetMediumQuality];
-      break;
-    case 3  :
-      _assetExport = [[AVAssetExportSession alloc] initWithAsset:mixComposition presetName:AVAssetExportPresetHighestQuality];
-      break;
-    case 4  :
-      _assetExport = [[AVAssetExportSession alloc] initWithAsset:mixComposition presetName:AVAssetExportPreset1280x720];
-      break;
-    case 5  :
-      _assetExport = [[AVAssetExportSession alloc] initWithAsset:mixComposition presetName:AVAssetExportPreset960x540];
-      break;
-    case 6  :
-      _assetExport = [[AVAssetExportSession alloc] initWithAsset:mixComposition presetName:AVAssetExportPreset640x480];
-      break;
-   
-    default :
-      _assetExport = [[AVAssetExportSession alloc] initWithAsset:mixComposition presetName:AVAssetExportPresetHighestQuality];
-  }
-  _assetExport.outputFileType = AVFileTypeQuickTimeMovie;
-  _assetExport.outputURL = outputFileUrl;
-  
-  if([videoObject[@"videoFileLimit"] intValue] != 0){
-    _assetExport.fileLengthLimit = [videoObject[@"videoFileLimit"] intValue];
-  }
-  
-  
-  
-  [_assetExport exportAsynchronouslyWithCompletionHandler:
-   ^(void) {
-     
-     dispatch_async(dispatch_get_main_queue(), ^{
-       [self exportDidFinish:_assetExport errorCallback:failureCallback callback:successCallback];
-     });
-   }
-   ];*/
 }
 
 //RCT_EXPORT_METHOD(transcodeItem:(NSDictionary *)videoObject){
@@ -377,25 +275,8 @@ RCT_EXPORT_METHOD(deleteItem:(NSDictionary *)videoObject){
   NSURL *outputURL;
   if(session.status == AVAssetExportSessionStatusCompleted){
     outputURL = session.outputURL;
-    ALAssetsLibrary *library = [[ALAssetsLibrary alloc] init];
-    if ([library videoAtPathIsCompatibleWithSavedPhotosAlbum:outputURL]) {
-      [library writeVideoAtPathToSavedPhotosAlbum:outputURL
-                                  completionBlock:^(NSURL *assetURL, NSError *error){
-                                    dispatch_async(dispatch_get_main_queue(), ^{
-                                      if (error) {
-                                        NSLog(@"%@",error);
-                                        failureCallback(@[error]);
-                                      }else{
-                                        NSLog(@"%@",outputURL);
-                                        NSLog(@"VIdeo has been saved");
-                                        successCallback(@[@"merge video complete", outputURL.absoluteString]);
-                                        
-                                        //[self loadMoviePlayer:outputURL];
-                                      }
-                                    });
-                                  }];
-      NSLog(@"%@",outputURL);
-    }
+    successCallback(@[@"merge video complete", outputURL.absoluteString]);
+     NSLog(@"%@",outputURL);
   }
   
   
@@ -436,4 +317,5 @@ RCT_EXPORT_METHOD(deleteItem:(NSDictionary *)videoObject){
 }
 
 @end
+
 
