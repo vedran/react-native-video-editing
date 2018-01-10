@@ -1,5 +1,3 @@
-
-
 #import "RNAVEditing.h"
 #if __has_include("RCTUtils.h")
 #import "RCTUtils.h"
@@ -157,6 +155,40 @@ RCT_EXPORT_METHOD(audioVideoSpeedFilter:(NSDictionary *)videoObject
 }
 
 
+-(void)cropVideo:(NSURL*)videoToTrimURL
+                 errorCallback:(RCTResponseSenderBlock)failureCallback
+                  callback:(RCTResponseSenderBlock)successCallback
+{
+  AVURLAsset *asset = [AVURLAsset URLAssetWithURL:videoToTrimURL options:nil];
+  AVAssetExportSession *exportSession = [[AVAssetExportSession alloc] initWithAsset:asset presetName:AVAssetExportPresetHighestQuality];
+  
+  NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+  NSString *outputURL = paths[0];
+  NSFileManager *manager = [NSFileManager defaultManager];
+  [manager createDirectoryAtPath:outputURL withIntermediateDirectories:YES attributes:nil error:nil];
+  outputURL = [outputURL stringByAppendingPathComponent:@"output.mp4"];
+  // Remove Existing File
+  [manager removeItemAtPath:outputURL error:nil];
+  
+  
+  exportSession.outputURL = [NSURL fileURLWithPath:outputURL];
+  exportSession.shouldOptimizeForNetworkUse = YES;
+  exportSession.outputFileType = AVFileTypeQuickTimeMovie;
+  CMTime start = CMTimeMakeWithSeconds(0.0, 600); // you will modify time range here
+  CMTime duration = CMTimeMakeWithSeconds(30.0, 600);
+  CMTimeRange range = CMTimeRangeMake(start, duration);
+  exportSession.timeRange = range;
+  
+  [exportSession exportAsynchronouslyWithCompletionHandler:
+   ^(void) {
+     
+     dispatch_async(dispatch_get_main_queue(), ^{
+       [self exportDidFinish:exportSession errorCallback:failureCallback callback:successCallback];
+     });
+   }
+   ];
+}
+
 RCT_EXPORT_METHOD(videoTriming:(NSDictionary *)videoObject
                   audioObject:(NSDictionary *)audioObject
                   errorCallback:(RCTResponseSenderBlock)failureCallback
@@ -165,7 +197,51 @@ RCT_EXPORT_METHOD(videoTriming:(NSDictionary *)videoObject
   NSLog(@"%@ %@", NSStringFromClass([self class]), NSStringFromSelector(_cmd));
   
   
-  AVURLAsset *videoAsset = [self uriSource:videoObject];
+  AVURLAsset *asset = [self uriSource:videoObject];
+  
+  //
+  AVAssetExportSession *exportSession = [[AVAssetExportSession alloc] initWithAsset:asset presetName:AVAssetExportPresetHighestQuality];
+  
+  
+  NSArray *dirPaths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+  NSString *docsDir = [dirPaths objectAtIndex:0];
+  NSString *outputFilePath = [docsDir stringByAppendingPathComponent:[NSString stringWithFormat:@"Groups.mp4"]];
+  NSURL *outputFileUrl = [NSURL fileURLWithPath:outputFilePath];
+  if ([[NSFileManager defaultManager] fileExistsAtPath:outputFilePath])
+    [[NSFileManager defaultManager] removeItemAtPath:outputFilePath error:nil];
+  
+  exportSession.outputURL = outputFileUrl;
+  exportSession.shouldOptimizeForNetworkUse = YES;
+  exportSession.outputFileType = AVFileTypeQuickTimeMovie;
+  CMTime start = CMTimeMakeWithSeconds(0.0, 600); // you will modify time range here
+  CMTime duration = CMTimeMakeWithSeconds(30.0, 600);
+  CMTimeRange range = CMTimeRangeMake(start, duration);
+  exportSession.timeRange = range;
+  
+  
+  [exportSession exportAsynchronouslyWithCompletionHandler:
+   ^(void) {
+     
+     dispatch_async(dispatch_get_main_queue(), ^{
+       [self exportDidFinish:exportSession errorCallback:failureCallback callback:successCallback];
+     });
+   }
+   ];
+  
+
+  return;
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  /*
+ 
   
   CMTime duration;
   if ([videoObject[@"duration"] doubleValue] == 0.0) {
@@ -233,9 +309,8 @@ RCT_EXPORT_METHOD(videoTriming:(NSDictionary *)videoObject
     case 6  :
       _assetExport = [[AVAssetExportSession alloc] initWithAsset:mixComposition presetName:AVAssetExportPreset640x480];
       break;
-      
-      /* you can have any number of case statements */
-    default : /* Optional */
+   
+    default :
       _assetExport = [[AVAssetExportSession alloc] initWithAsset:mixComposition presetName:AVAssetExportPresetHighestQuality];
   }
   _assetExport.outputFileType = AVFileTypeQuickTimeMovie;
@@ -254,7 +329,7 @@ RCT_EXPORT_METHOD(videoTriming:(NSDictionary *)videoObject
        [self exportDidFinish:_assetExport errorCallback:failureCallback callback:successCallback];
      });
    }
-   ];
+   ];*/
 }
 
 //RCT_EXPORT_METHOD(transcodeItem:(NSDictionary *)videoObject){
