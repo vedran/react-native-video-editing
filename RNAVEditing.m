@@ -1,4 +1,3 @@
-
 #import "RNAVEditing.h"
 #if __has_include("RCTUtils.h")
 #import "RCTUtils.h"
@@ -206,7 +205,7 @@ RCT_EXPORT_METHOD(videoTriming:(NSDictionary *)videoObject
   
   NSArray *dirPaths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
   NSString *docsDir = [dirPaths objectAtIndex:0];
-  NSString *outputFilePath = [docsDir stringByAppendingPathComponent:[NSString stringWithFormat:@"Groups.mp4"]];
+  NSString *outputFilePath = [docsDir stringByAppendingPathComponent:[NSString stringWithFormat:@"cropped.mp4"]];
   NSURL *outputFileUrl = [NSURL fileURLWithPath:outputFilePath];
   if ([[NSFileManager defaultManager] fileExistsAtPath:outputFilePath])
     [[NSFileManager defaultManager] removeItemAtPath:outputFilePath error:nil];
