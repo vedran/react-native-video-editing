@@ -200,7 +200,7 @@ RCT_EXPORT_METHOD(videoTriming:(NSDictionary *)videoObject
   AVURLAsset *asset = [self uriSource:videoObject];
   
   //
-  AVAssetExportSession *exportSession = [[AVAssetExportSession alloc] initWithAsset:asset presetName:AVAssetExportPresetHighestQuality];
+  AVAssetExportSession *exportSession = [[AVAssetExportSession alloc] initWithAsset:asset presetName:AVAssetExportPresetMediumQuality];
   
   
   NSArray *dirPaths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
@@ -213,17 +213,25 @@ RCT_EXPORT_METHOD(videoTriming:(NSDictionary *)videoObject
   exportSession.outputURL = outputFileUrl;
   exportSession.shouldOptimizeForNetworkUse = YES;
   exportSession.outputFileType = AVFileTypeQuickTimeMovie;
-  CMTime start = CMTimeMakeWithSeconds(0.0, 600); // you will modify time range here
-  CMTime duration = CMTimeMakeWithSeconds(30.0, 600);
+  CMTime start = CMTimeMakeWithSeconds(0.0, 600);
+  
+  CMTime duration = asset.duration;
+  
+  long durationSeconds = duration.value/duration.timescale;
+  
+  if(durationSeconds > 30) {
+     duration = CMTimeMakeWithSeconds(30.0, 600);
+     durationSeconds = duration.value/duration.timescale;
+  }
+  
   CMTimeRange range = CMTimeRangeMake(start, duration);
   exportSession.timeRange = range;
-  
   
   [exportSession exportAsynchronouslyWithCompletionHandler:
    ^(void) {
      
      dispatch_async(dispatch_get_main_queue(), ^{
-       [self exportDidFinish:exportSession errorCallback:failureCallback callback:successCallback];
+       [self exportDidFinish:exportSession duration:durationSeconds errorCallback:failureCallback callback:successCallback];
      });
    }
    ];
@@ -279,6 +287,22 @@ RCT_EXPORT_METHOD(deleteItem:(NSDictionary *)videoObject){
   }
   
   
+}
+
+
+- (void)exportDidFinish:(AVAssetExportSession*)session
+               duration:(long)duration
+          errorCallback:(RCTResponseSenderBlock)failureCallback
+               callback:(RCTResponseSenderBlock)successCallback
+{ 
+  NSURL *outputURL;
+  if(session.status == AVAssetExportSessionStatusCompleted){
+    outputURL = session.outputURL;
+    
+    NSDictionary *result = @{ @"uri" : outputURL.absoluteString, @"duration" : [NSNumber numberWithLong:duration]};
+    successCallback(@[[NSNull null], result]);
+    NSLog(@"%@: %ld",outputURL, duration);
+  }
 }
 
 
